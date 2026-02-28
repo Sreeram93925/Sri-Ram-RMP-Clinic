@@ -208,10 +208,44 @@ let patientCounter = 6
 let appointmentCounter = 6
 let consultationCounter = 2
 
+// Helper to load persisted registered users/patients from localStorage
+function loadPersistedUsers(): User[] {
+  try {
+    const stored = localStorage.getItem("clinic_registered_users")
+    if (stored) return JSON.parse(stored) as User[]
+  } catch { }
+  return []
+}
+
+function loadPersistedPatients(): Patient[] {
+  try {
+    const stored = localStorage.getItem("clinic_registered_patients")
+    if (stored) return JSON.parse(stored) as Patient[]
+  } catch { }
+  return []
+}
+
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const [users, setUsers] = useState<User[]>(seedUsers)
-  const [patients, setPatients] = useState<Patient[]>(seedPatients)
+  // Merge seed users with any previously registered users from localStorage
+  const [users, setUsers] = useState<User[]>(() => {
+    const extra = typeof window !== "undefined" ? loadPersistedUsers() : []
+    // Avoid duplicates if a seed user somehow got saved
+    const merged = [...seedUsers]
+    extra.forEach((u) => {
+      if (!merged.some((s) => s.id === u.id)) merged.push(u)
+    })
+    return merged
+  })
+  // Merge seed patients with any previously registered patients from localStorage
+  const [patients, setPatients] = useState<Patient[]>(() => {
+    const extra = typeof window !== "undefined" ? loadPersistedPatients() : []
+    const merged = [...seedPatients]
+    extra.forEach((p) => {
+      if (!merged.some((s) => s.id === p.id)) merged.push(p)
+    })
+    return merged
+  })
   const [appointments, setAppointments] = useState<Appointment[]>(seedAppointments)
   const [consultations, setConsultations] = useState<Consultation[]>(seedConsultations)
   const [isInitialized, setIsInitialized] = useState(false)
@@ -281,8 +315,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }
       patientCounter++
 
-      setUsers((prev) => [...prev, newUser])
-      setPatients((prev) => [...prev, newPatient])
+      setUsers((prev) => {
+        const updated = [...prev, newUser]
+        try {
+          // Persist all non-seed registered users to localStorage
+          const extra = updated.filter((u) => !seedUsers.some((s) => s.id === u.id))
+          localStorage.setItem("clinic_registered_users", JSON.stringify(extra))
+        } catch { }
+        return updated
+      })
+      setPatients((prev) => {
+        const updated = [...prev, newPatient]
+        try {
+          // Persist all non-seed registered patients to localStorage
+          const extra = updated.filter((p) => !seedPatients.some((s) => s.id === p.id))
+          localStorage.setItem("clinic_registered_patients", JSON.stringify(extra))
+        } catch { }
+        return updated
+      })
       setCurrentUser(newUser)
 
       try {
