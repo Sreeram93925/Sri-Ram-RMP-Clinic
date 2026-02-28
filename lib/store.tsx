@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, useCallback } from "react"
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
 import {
   TIME_SLOTS,
   type User,
@@ -214,12 +214,35 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [patients, setPatients] = useState<Patient[]>(seedPatients)
   const [appointments, setAppointments] = useState<Appointment[]>(seedAppointments)
   const [consultations, setConsultations] = useState<Consultation[]>(seedConsultations)
+  const [isInitialized, setIsInitialized] = useState(false)
+
+  // Initialize session from localStorage
+  useEffect(() => {
+    try {
+      const storedUserId = localStorage.getItem("clinic_current_user_id")
+      if (storedUserId) {
+        const user = users.find((u) => u.id === storedUserId)
+        if (user) {
+          setCurrentUser(user)
+        }
+      }
+    } catch (e) {
+      console.error("Failed to restore session from localStorage", e)
+    } finally {
+      setIsInitialized(true)
+    }
+  }, [users])
 
   const login = useCallback(
     (email: string, password: string): User | null => {
       const user = users.find((u) => u.email === email && u.password === password)
       if (user) {
         setCurrentUser(user)
+        try {
+          localStorage.setItem("clinic_current_user_id", user.id)
+        } catch (e) {
+          console.error("Failed to save session to localStorage", e)
+        }
         return user
       }
       return null
@@ -259,13 +282,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setUsers((prev) => [...prev, newUser])
       setPatients((prev) => [...prev, newPatient])
       setCurrentUser(newUser)
-      
+
+      try {
+        localStorage.setItem("clinic_current_user_id", newUser.id)
+      } catch (e) {
+        console.error("Failed to save session to localStorage", e)
+      }
+
       return { user: newUser }
     },
     [users]
   )
 
-  const logout = useCallback(() => setCurrentUser(null), [])
+  const logout = useCallback(() => {
+    setCurrentUser(null)
+    try {
+      localStorage.removeItem("clinic_current_user_id")
+    } catch (e) {
+      console.error("Failed to remove session from localStorage", e)
+    }
+  }, [])
 
   const getDoctors = useCallback(
     () => users.filter((u) => u.role === "doctor"),
@@ -412,7 +448,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         getConsultationsForPatient,
       }}
     >
-      {children}
+      {/* Optional: we could refrain from rendering children until isInitialized, but since this is mock data and hydration is fast, we can safely render children right away. The UI login flash will be minimal. */}
+      {isInitialized ? children : null}
     </StoreContext.Provider>
   )
 }
