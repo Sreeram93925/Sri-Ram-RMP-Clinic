@@ -48,14 +48,15 @@ const StoreContext = createContext<StoreContextType | null>(null)
 // Helper to normalize MongoDB _id to id
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normalizeId<T>(doc: any): T {
-  if (doc._id && !doc.id) {
+  if (doc && doc._id && !doc.id) {
     return { ...doc, id: String(doc._id) } as T
   }
   return doc as T
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function normalizeDocs<T>(docs: any[]): T[] {
+function normalizeDocs<T>(docs: any[] | undefined | null): T[] {
+  if (!docs || !Array.isArray(docs)) return []
   return docs.map((d) => normalizeId<T>(d))
 }
 

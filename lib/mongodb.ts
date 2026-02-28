@@ -24,9 +24,26 @@ export async function connectDB() {
     if (cached.conn) return cached.conn
 
     if (!cached.promise) {
-        cached.promise = mongoose.connect(MONGO_URI, { dbName: "sri_ram_clinic" }).then((m) => m)
+        const opts = {
+            dbName: "sri_ram_clinic",
+            serverSelectionTimeoutMS: 10000, // 10 seconds timeout
+        }
+        console.log("Starting MongoDB connection...")
+        cached.promise = mongoose.connect(MONGO_URI, opts).then((m) => {
+            console.log("MongoDB connected successfully to:", m.connection.host)
+            return m
+        }).catch((err: any) => {
+            console.error("MongoDB connection error in promise:", err.message)
+            cached.promise = null // Reset so we can try again
+            throw err
+        })
     }
 
-    cached.conn = await cached.promise
+    try {
+        cached.conn = await cached.promise
+    } catch (err: any) {
+        console.error("Failed to await MongoDB connection:", err.message)
+        throw err
+    }
     return cached.conn
 }
