@@ -174,6 +174,7 @@ interface StoreContextType {
   // Auth
   currentUser: User | null
   login: (email: string, password: string) => User | null
+  register: (data: Omit<User, "id" | "role"> & { mobile: string }) => { user?: User; error?: string }
   logout: () => void
 
   // Users
@@ -209,7 +210,7 @@ let consultationCounter = 2
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const [users] = useState<User[]>(seedUsers)
+  const [users, setUsers] = useState<User[]>(seedUsers)
   const [patients, setPatients] = useState<Patient[]>(seedPatients)
   const [appointments, setAppointments] = useState<Appointment[]>(seedAppointments)
   const [consultations, setConsultations] = useState<Consultation[]>(seedConsultations)
@@ -222,6 +223,44 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         return user
       }
       return null
+    },
+    [users]
+  )
+
+  const register = useCallback(
+    (data: Omit<User, "id" | "role"> & { mobile: string }): { user?: User; error?: string } => {
+      // Check if email already exists
+      if (users.some((u) => u.email === data.email)) {
+        return { error: "An user with this email already exists" }
+      }
+
+      // Create standard user account
+      const newUser: User = {
+        ...data,
+        id: `u${users.length + 1}`,
+        role: "patient"
+      }
+
+      // Create corresponding patient profile
+      const newPatient: Patient = {
+        id: `p${patientCounter}`,
+        patientId: `PAT-${String(patientCounter).padStart(3, "0")}`,
+        name: data.name,
+        mobile: data.mobile,
+        // Default patient values since form doesn't capture these yet
+        age: 0,
+        gender: "other",
+        address: "Not provided",
+        registrationDate: new Date().toISOString().split("T")[0],
+        userId: newUser.id
+      }
+      patientCounter++
+
+      setUsers((prev) => [...prev, newUser])
+      setPatients((prev) => [...prev, newPatient])
+      setCurrentUser(newUser)
+      
+      return { user: newUser }
     },
     [users]
   )
@@ -353,6 +392,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       value={{
         currentUser,
         login,
+        register,
         logout,
         users,
         getDoctors,

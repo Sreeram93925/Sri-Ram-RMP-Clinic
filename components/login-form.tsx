@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Heart, AlertCircle, ArrowLeft, ShieldCheck, Clock, FileText, Users } from "lucide-react"
 
+import Link from "next/link"
+
 interface LoginFormProps {
   onBackToHome?: () => void
 }
@@ -153,6 +155,13 @@ export function LoginForm({ onBackToHome }: LoginFormProps) {
             <Button type="submit" className="w-full h-11 mt-1 font-semibold">
               Sign In
             </Button>
+
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              Don't have an account?{" "}
+              <Link href="/register" className="font-semibold text-primary hover:underline">
+                Create one
+              </Link>
+            </p>
           </form>
 
           <div className="mt-8">
