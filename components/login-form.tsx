@@ -15,7 +15,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onBackToHome }: LoginFormProps) {
-  const { login } = useStore()
+  const { login, users } = useStore()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -29,11 +29,19 @@ export function LoginForm({ onBackToHome }: LoginFormProps) {
     }
   }
 
+  // Helper finding the first user matching a given role
+  const getDemoUser = (role: string) => users.find((u) => u.role === role)
+
+  const adminUser = getDemoUser("admin")
+  const doctorUser = getDemoUser("doctor")
+  const receptionistUser = getDemoUser("receptionist")
+  const patientUser = getDemoUser("patient")
+
   const demoAccounts = [
-    { role: "Admin", email: "admin@clinic.com", password: "admin123", icon: ShieldCheck, color: "bg-primary/10 text-primary border-primary/20" },
-    { role: "Doctor", email: "doctor@clinic.com", password: "doctor123", icon: Heart, color: "bg-accent/10 text-accent border-accent/20" },
-    { role: "Receptionist", email: "reception@clinic.com", password: "reception123", icon: Users, color: "bg-chart-3/10 text-chart-3 border-chart-3/20" },
-    { role: "Patient", email: "patient@clinic.com", password: "patient123", icon: FileText, color: "bg-chart-4/10 text-chart-4 border-chart-4/20" },
+    ...(adminUser ? [{ role: "Admin", email: adminUser.email, password: adminUser.password, icon: ShieldCheck, color: "bg-primary/10 text-primary border-primary/20" }] : []),
+    ...(doctorUser ? [{ role: "Doctor", email: doctorUser.email, password: doctorUser.password, icon: Heart, color: "bg-accent/10 text-accent border-accent/20" }] : []),
+    ...(receptionistUser ? [{ role: "Receptionist", email: receptionistUser.email, password: receptionistUser.password, icon: Users, color: "bg-chart-3/10 text-chart-3 border-chart-3/20" }] : []),
+    ...(patientUser ? [{ role: "Patient", email: patientUser.email, password: patientUser.password, icon: FileText, color: "bg-chart-4/10 text-chart-4 border-chart-4/20" }] : []),
   ]
 
   return (
