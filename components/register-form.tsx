@@ -5,7 +5,15 @@ import { useStore } from "@/lib/store"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Heart, AlertCircle, ArrowLeft, ShieldCheck, Clock, FileText, Users } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { Heart, AlertCircle, ArrowLeft, ShieldCheck, Clock, FileText } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -18,6 +26,9 @@ export function RegisterForm() {
     const [password, setPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
     const [mobile, setMobile] = useState("")
+    const [age, setAge] = useState("")
+    const [gender, setGender] = useState<"male" | "female" | "other">("male")
+    const [address, setAddress] = useState("")
     const [error, setError] = useState("")
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -34,11 +45,19 @@ export function RegisterForm() {
             return
         }
 
+        if (!age || isNaN(parseInt(age)) || parseInt(age) <= 0) {
+            setError("Please enter a valid age")
+            return
+        }
+
         const { user, error: registerError } = register({
             name,
             email,
             password,
-            mobile
+            mobile,
+            age: parseInt(age),
+            gender,
+            address,
         })
 
         if (registerError) {
@@ -86,7 +105,7 @@ export function RegisterForm() {
                     <div className="flex flex-col gap-4">
                         {[
                             { icon: FileText, text: "Access your digital health records" },
-                            { icon: Clock, text: "Book and manage appointments easily" },
+                            { icon: Clock, text: "Book and track appointments easily" },
                             { icon: ShieldCheck, text: "Secure and private information" },
                         ].map((item) => (
                             <div key={item.text} className="flex items-center gap-3">
@@ -105,8 +124,8 @@ export function RegisterForm() {
             </div>
 
             {/* Right panel - register form */}
-            <div className="flex flex-1 flex-col items-center justify-center bg-background p-6 lg:p-10 relative">
-                <div className="w-full max-w-sm">
+            <div className="flex flex-1 flex-col items-center justify-center bg-background p-6 lg:p-10 overflow-y-auto">
+                <div className="w-full max-w-sm py-8">
                     {/* Mobile back button */}
                     <Link
                         href="/"
@@ -128,7 +147,7 @@ export function RegisterForm() {
 
                     <div className="mb-8">
                         <h1 className="text-2xl font-bold text-foreground">Create Account</h1>
-                        <p className="text-muted-foreground text-sm mt-1">Sign up as a new patient</p>
+                        <p className="text-muted-foreground text-sm mt-1">Sign up as a new patient to book appointments and track your health records</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -139,11 +158,12 @@ export function RegisterForm() {
                             </div>
                         )}
 
+                        {/* Personal Info */}
                         <div className="flex flex-col gap-2">
                             <Label htmlFor="name">Full Name</Label>
                             <Input
                                 id="name"
-                                placeholder="John Doe"
+                                placeholder="e.g. Ravi Kumar"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 required
@@ -151,17 +171,34 @@ export function RegisterForm() {
                             />
                         </div>
 
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="patient@example.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                className="h-11"
-                            />
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="age">Age</Label>
+                                <Input
+                                    id="age"
+                                    type="number"
+                                    min="1"
+                                    max="120"
+                                    placeholder="e.g. 35"
+                                    value={age}
+                                    onChange={(e) => setAge(e.target.value)}
+                                    required
+                                    className="h-11"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="gender">Gender</Label>
+                                <Select value={gender} onValueChange={(v) => setGender(v as "male" | "female" | "other")}>
+                                    <SelectTrigger id="gender" className="h-11">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="male">Male</SelectItem>
+                                        <SelectItem value="female">Female</SelectItem>
+                                        <SelectItem value="other">Other</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
 
                         <div className="flex flex-col gap-2">
@@ -178,36 +215,65 @@ export function RegisterForm() {
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="Create a password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                className="h-11"
+                            <Label htmlFor="address">Address <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+                            <Textarea
+                                id="address"
+                                placeholder="Your home address"
+                                value={address}
+                                onChange={(e) => setAddress(e.target.value)}
+                                rows={2}
+                                className="resize-none"
                             />
                         </div>
 
-                        <div className="flex flex-col gap-2 mb-2">
-                            <Label htmlFor="confirmPassword">Confirm Password</Label>
-                            <Input
-                                id="confirmPassword"
-                                type="password"
-                                placeholder="Confirm your password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                                className="h-11"
-                            />
+                        {/* Account Credentials */}
+                        <div className="border-t pt-4 mt-1 flex flex-col gap-4">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Login Credentials</p>
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    placeholder="you@example.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    className="h-11"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="password">Password</Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    placeholder="At least 6 characters"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    className="h-11"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                                <Input
+                                    id="confirmPassword"
+                                    type="password"
+                                    placeholder="Confirm your password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    required
+                                    className="h-11"
+                                />
+                            </div>
                         </div>
 
                         <Button type="submit" className="w-full h-11 mt-1 font-semibold">
-                            Create Account
+                            Create Account & Sign In
                         </Button>
 
-                        <p className="text-center text-sm text-muted-foreground mt-4">
+                        <p className="text-center text-sm text-muted-foreground mt-2">
                             Already have an account?{" "}
                             <Link href="/login" className="font-semibold text-primary hover:underline">
                                 Sign in here

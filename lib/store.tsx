@@ -174,7 +174,7 @@ interface StoreContextType {
   // Auth
   currentUser: User | null
   login: (email: string, password: string) => User | null
-  register: (data: Omit<User, "id" | "role"> & { mobile: string }) => { user?: User; error?: string }
+  register: (data: Omit<User, "id" | "role"> & { mobile: string; age: number; gender: "male" | "female" | "other"; address?: string }) => { user?: User; error?: string }
   logout: () => void
 
   // Users
@@ -251,29 +251,31 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   )
 
   const register = useCallback(
-    (data: Omit<User, "id" | "role"> & { mobile: string }): { user?: User; error?: string } => {
+    (data: Omit<User, "id" | "role"> & { mobile: string; age: number; gender: "male" | "female" | "other"; address?: string }): { user?: User; error?: string } => {
       // Check if email already exists
       if (users.some((u) => u.email === data.email)) {
-        return { error: "An user with this email already exists" }
+        return { error: "An account with this email already exists" }
       }
 
       // Create standard user account
       const newUser: User = {
-        ...data,
         id: `u${users.length + 1}`,
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        mobile: data.mobile,
         role: "patient"
       }
 
-      // Create corresponding patient profile
+      // Create corresponding patient profile with full details
       const newPatient: Patient = {
         id: `p${patientCounter}`,
         patientId: `PAT-${String(patientCounter).padStart(3, "0")}`,
         name: data.name,
         mobile: data.mobile,
-        // Default patient values since form doesn't capture these yet
-        age: 0,
-        gender: "other",
-        address: "Not provided",
+        age: data.age,
+        gender: data.gender,
+        address: data.address || "Not provided",
         registrationDate: new Date().toISOString().split("T")[0],
         userId: newUser.id
       }

@@ -1,20 +1,26 @@
 "use client"
 
 import { useState } from "react"
-import { StoreProvider } from "@/lib/store"
+import { StoreProvider, useStore } from "@/lib/store"
 import { AppShell } from "@/components/app-shell"
 import { Homepage } from "@/components/homepage/homepage"
 
-export default function Page() {
+function AppContent() {
+  const { currentUser } = useStore()
   const [showApp, setShowApp] = useState(false)
 
-  if (showApp) {
-    return (
-      <StoreProvider>
-        <AppShell onBackToHome={() => setShowApp(false)} />
-      </StoreProvider>
-    )
+  // If user is already logged in (session restored from localStorage), show dashboard
+  if (currentUser || showApp) {
+    return <AppShell onBackToHome={() => setShowApp(false)} />
   }
 
   return <Homepage onLogin={() => setShowApp(true)} />
+}
+
+export default function Page() {
+  return (
+    <StoreProvider>
+      <AppContent />
+    </StoreProvider>
+  )
 }
