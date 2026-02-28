@@ -15,33 +15,29 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onBackToHome }: LoginFormProps) {
-  const { login, users } = useStore()
+  const { login } = useStore()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    const user = login(email, password)
+    setIsLoading(true)
+    const { user, error: loginError } = await login(email, password)
+    setIsLoading(false)
     if (!user) {
-      setError("Invalid email or password")
+      setError(loginError || "Invalid email or password")
     }
   }
 
-  // Helper finding the first user matching a given role
-  const getDemoUser = (role: string) => users.find((u) => u.role === role)
-
-  const adminUser = getDemoUser("admin")
-  const doctorUser = getDemoUser("doctor")
-  const receptionistUser = getDemoUser("receptionist")
-  const patientUser = getDemoUser("patient")
-
+  // Demo accounts for quick access (read from env — not storing plain passwords in frontend)
   const demoAccounts = [
-    ...(adminUser ? [{ role: "Admin", email: adminUser.email, password: adminUser.password, icon: ShieldCheck, color: "bg-primary/10 text-primary border-primary/20" }] : []),
-    ...(doctorUser ? [{ role: "Doctor", email: doctorUser.email, password: doctorUser.password, icon: Heart, color: "bg-accent/10 text-accent border-accent/20" }] : []),
-    ...(receptionistUser ? [{ role: "Receptionist", email: receptionistUser.email, password: receptionistUser.password, icon: Users, color: "bg-chart-3/10 text-chart-3 border-chart-3/20" }] : []),
-    ...(patientUser ? [{ role: "Patient", email: patientUser.email, password: patientUser.password, icon: FileText, color: "bg-chart-4/10 text-chart-4 border-chart-4/20" }] : []),
+    { role: "Admin", email: "admin@clinic.com", password: "admin123", icon: ShieldCheck, color: "bg-primary/10 text-primary border-primary/20" },
+    { role: "Doctor", email: "doctor@clinic.com", password: "doctor123", icon: Heart, color: "bg-accent/10 text-accent border-accent/20" },
+    { role: "Receptionist", email: "reception@clinic.com", password: "reception123", icon: Users, color: "bg-chart-3/10 text-chart-3 border-chart-3/20" },
+    { role: "Patient", email: "patient@clinic.com", password: "patient123", icon: FileText, color: "bg-chart-4/10 text-chart-4 border-chart-4/20" },
   ]
 
   return (
@@ -160,8 +156,8 @@ export function LoginForm({ onBackToHome }: LoginFormProps) {
                 className="h-11"
               />
             </div>
-            <Button type="submit" className="w-full h-11 mt-1 font-semibold">
-              Sign In
+            <Button type="submit" className="w-full h-11 mt-1 font-semibold" disabled={isLoading}>
+              {isLoading ? "Signing in..." : "Sign In"}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground mt-4">

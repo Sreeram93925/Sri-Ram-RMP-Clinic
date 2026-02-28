@@ -8,174 +8,15 @@ import {
   type Appointment,
   type Consultation,
   type AppointmentStatus,
-  type UserRole,
 } from "./types"
-
-// Seed data
-const seedUsers: User[] = [
-  {
-    id: "u1",
-    name: "Dr. Sree Ram (Admin)",
-    email: "admin@clinic.com",
-    password: "admin123",
-    role: "admin",
-  },
-  {
-    id: "u2",
-    name: "Dr. Sree Ram",
-    email: "doctor@clinic.com",
-    password: "doctor123",
-    role: "doctor",
-    specialization: "General Medicine",
-  },
-  {
-    id: "u3",
-    name: "Priya Sharma",
-    email: "reception@clinic.com",
-    password: "reception123",
-    role: "receptionist",
-    mobile: "9876543210",
-  },
-  {
-    id: "u4",
-    name: "Amit Patel",
-    email: "patient@clinic.com",
-    password: "patient123",
-    role: "patient",
-    mobile: "9123456780",
-  },
-]
-
-const today = new Date().toISOString().split("T")[0]
-
-const seedPatients: Patient[] = [
-  {
-    id: "p1",
-    patientId: "PAT-001",
-    name: "Amit Patel",
-    age: 35,
-    gender: "male",
-    mobile: "9123456780",
-    address: "12 MG Road, Mumbai",
-    registrationDate: "2025-12-01",
-    userId: "u4",
-  },
-  {
-    id: "p2",
-    patientId: "PAT-002",
-    name: "Sunita Devi",
-    age: 42,
-    gender: "female",
-    mobile: "9234567890",
-    address: "45 Station Road, Delhi",
-    registrationDate: "2025-12-05",
-  },
-  {
-    id: "p3",
-    patientId: "PAT-003",
-    name: "Rahul Verma",
-    age: 28,
-    gender: "male",
-    mobile: "9345678901",
-    address: "78 Park Street, Kolkata",
-    registrationDate: "2026-01-10",
-  },
-  {
-    id: "p4",
-    patientId: "PAT-004",
-    name: "Meena Kumari",
-    age: 55,
-    gender: "female",
-    mobile: "9456789012",
-    address: "23 Lake View, Bangalore",
-    registrationDate: "2026-01-15",
-  },
-  {
-    id: "p5",
-    patientId: "PAT-005",
-    name: "Arjun Singh",
-    age: 22,
-    gender: "male",
-    mobile: "9567890123",
-    address: "56 Main Bazaar, Jaipur",
-    registrationDate: "2026-02-01",
-  },
-]
-
-const seedAppointments: Appointment[] = [
-  {
-    id: "a1",
-    appointmentId: "APT-001",
-    patientId: "p1",
-    doctorId: "u2",
-    date: today,
-    timeSlot: "10:00 AM",
-    status: "confirmed",
-    createdAt: "2026-02-25",
-  },
-  {
-    id: "a2",
-    appointmentId: "APT-002",
-    patientId: "p2",
-    doctorId: "u2",
-    date: today,
-    timeSlot: "10:30 AM",
-    status: "waiting",
-    createdAt: "2026-02-25",
-  },
-  {
-    id: "a3",
-    appointmentId: "APT-003",
-    patientId: "p3",
-    doctorId: "u2",
-    date: today,
-    timeSlot: "11:00 AM",
-    status: "in-progress",
-    createdAt: "2026-02-26",
-  },
-  {
-    id: "a4",
-    appointmentId: "APT-004",
-    patientId: "p4",
-    doctorId: "u2",
-    date: today,
-    timeSlot: "02:00 PM",
-    status: "waiting",
-    createdAt: "2026-02-26",
-  },
-  {
-    id: "a5",
-    appointmentId: "APT-005",
-    patientId: "p5",
-    doctorId: "u2",
-    date: "2026-02-20",
-    timeSlot: "03:00 PM",
-    status: "completed",
-    createdAt: "2026-02-18",
-  },
-]
-
-const seedConsultations: Consultation[] = [
-  {
-    id: "c1",
-    appointmentId: "a5",
-    patientId: "p5",
-    doctorId: "u2",
-    symptoms: "Fever, headache, body pain",
-    diagnosis: "Viral fever",
-    prescription: "Paracetamol 500mg - 3 times daily for 5 days\nRest advised",
-    followUpDate: "2026-03-01",
-    notes: "Patient responded well to initial treatment.",
-    createdAt: "2026-02-20",
-  },
-]
 
 interface StoreContextType {
   // Auth
   currentUser: User | null
-  login: (email: string, password: string) => User | null
-  register: (data: Omit<User, "id" | "role"> & { mobile: string; age: number; gender: "male" | "female" | "other"; address?: string }) => { user?: User; error?: string }
-  logout: () => void
+  isLoading: boolean
+  login: (email: string, password: string) => Promise<{ user?: User; error?: string }>
+  register: (data: { name: string; email: string; password: string; mobile: string; age: number; gender: "male" | "female" | "other"; address?: string }) => Promise<{ user?: User; error?: string }>
+  logout: () => Promise<void>
 
   // Users
   users: User[]
@@ -183,302 +24,253 @@ interface StoreContextType {
 
   // Patients
   patients: Patient[]
-  addPatient: (patient: Omit<Patient, "id" | "patientId" | "registrationDate">) => Patient
-  updatePatient: (id: string, data: Partial<Patient>) => void
+  addPatient: (patient: Omit<Patient, "id" | "patientId" | "registrationDate">) => Promise<Patient>
+  updatePatient: (id: string, data: Partial<Patient>) => Promise<void>
   getPatientById: (id: string) => Patient | undefined
   searchPatients: (query: string) => Patient[]
 
   // Appointments
   appointments: Appointment[]
-  addAppointment: (appt: Omit<Appointment, "id" | "appointmentId" | "createdAt">) => Appointment
-  updateAppointmentStatus: (id: string, status: AppointmentStatus) => void
+  addAppointment: (appt: Omit<Appointment, "id" | "appointmentId" | "createdAt">) => Promise<Appointment>
+  updateAppointmentStatus: (id: string, status: AppointmentStatus) => Promise<void>
   getAvailableSlots: (doctorId: string, date: string) => string[]
   getAppointmentsForDoctor: (doctorId: string, date?: string) => Appointment[]
   getAppointmentsForPatient: (patientId: string) => Appointment[]
 
   // Consultations
   consultations: Consultation[]
-  addConsultation: (cons: Omit<Consultation, "id" | "createdAt">) => Consultation
+  addConsultation: (cons: Omit<Consultation, "id" | "createdAt">) => Promise<Consultation>
   getConsultationsForPatient: (patientId: string) => Consultation[]
 }
 
 const StoreContext = createContext<StoreContextType | null>(null)
 
-let patientCounter = 6
-let appointmentCounter = 6
-let consultationCounter = 2
-
-// Helper to load persisted registered users/patients from localStorage
-function loadPersistedUsers(): User[] {
-  try {
-    const stored = localStorage.getItem("clinic_registered_users")
-    if (stored) return JSON.parse(stored) as User[]
-  } catch { }
-  return []
+// Helper to normalize MongoDB _id to id
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeId<T>(doc: any): T {
+  if (doc._id && !doc.id) {
+    return { ...doc, id: String(doc._id) } as T
+  }
+  return doc as T
 }
 
-function loadPersistedPatients(): Patient[] {
-  try {
-    const stored = localStorage.getItem("clinic_registered_patients")
-    if (stored) return JSON.parse(stored) as Patient[]
-  } catch { }
-  return []
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeDocs<T>(docs: any[]): T[] {
+  return docs.map((d) => normalizeId<T>(d))
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
-  // Merge seed users with any previously registered users from localStorage
-  const [users, setUsers] = useState<User[]>(() => {
-    const extra = typeof window !== "undefined" ? loadPersistedUsers() : []
-    // Avoid duplicates if a seed user somehow got saved
-    const merged = [...seedUsers]
-    extra.forEach((u) => {
-      if (!merged.some((s) => s.id === u.id)) merged.push(u)
-    })
-    return merged
-  })
-  // Merge seed patients with any previously registered patients from localStorage
-  const [patients, setPatients] = useState<Patient[]>(() => {
-    const extra = typeof window !== "undefined" ? loadPersistedPatients() : []
-    const merged = [...seedPatients]
-    extra.forEach((p) => {
-      if (!merged.some((s) => s.id === p.id)) merged.push(p)
-    })
-    return merged
-  })
-  const [appointments, setAppointments] = useState<Appointment[]>(seedAppointments)
-  const [consultations, setConsultations] = useState<Consultation[]>(seedConsultations)
-  const [isInitialized, setIsInitialized] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [users, setUsers] = useState<User[]>([])
+  const [patients, setPatients] = useState<Patient[]>([])
+  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [consultations, setConsultations] = useState<Consultation[]>([])
 
-  // Initialize session from localStorage
+  // Restore session from JWT cookie on load
   useEffect(() => {
-    try {
-      const storedUserId = localStorage.getItem("clinic_current_user_id")
-      if (storedUserId) {
-        const user = users.find((u) => u.id === storedUserId)
-        if (user) {
-          setCurrentUser(user)
+    async function restoreSession() {
+      try {
+        const res = await fetch("/api/auth/me")
+        const data = await res.json()
+        if (data.user) {
+          setCurrentUser(normalizeId(data.user))
         }
+      } catch { }
+      finally {
+        setIsLoading(false)
       }
-    } catch (e) {
-      console.error("Failed to restore session from localStorage", e)
-    } finally {
-      setIsInitialized(true)
     }
+    restoreSession()
+  }, [])
+
+  // Load data when user is set
+  useEffect(() => {
+    if (!currentUser) {
+      setPatients([])
+      setAppointments([])
+      setConsultations([])
+      setUsers([])
+      return
+    }
+
+    async function loadData() {
+      try {
+        const [pRes, aRes, cRes, dRes] = await Promise.all([
+          fetch("/api/patients"),
+          fetch("/api/appointments"),
+          fetch("/api/consultations"),
+          fetch("/api/doctors"),
+        ])
+        const [pData, aData, cData, dData] = await Promise.all([
+          pRes.json(), aRes.json(), cRes.json(), dRes.json(),
+        ])
+        if (pData.patients) setPatients(normalizeDocs(pData.patients))
+        if (aData.appointments) setAppointments(normalizeDocs(aData.appointments))
+        if (cData.consultations) setConsultations(normalizeDocs(cData.consultations))
+        if (dData.doctors) setUsers(normalizeDocs(dData.doctors))
+      } catch (e) {
+        console.error("Failed to load data", e)
+      }
+    }
+
+    loadData()
+  }, [currentUser])
+
+  const login = useCallback(async (email: string, password: string): Promise<{ user?: User; error?: string }> => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json()
+      if (!res.ok) return { error: data.error || "Invalid email or password" }
+      const user = normalizeId(data.user) as User
+      setCurrentUser(user)
+      return { user }
+    } catch {
+      return { error: "Network error. Please try again." }
+    }
+  }, [])
+
+  const register = useCallback(async (formData: {
+    name: string; email: string; password: string; mobile: string;
+    age: number; gender: "male" | "female" | "other"; address?: string
+  }): Promise<{ user?: User; error?: string }> => {
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+      const data = await res.json()
+      if (!res.ok) return { error: data.error || "Registration failed" }
+      const user = normalizeId(data.user) as User
+      setCurrentUser(user)
+      return { user }
+    } catch {
+      return { error: "Network error. Please try again." }
+    }
+  }, [])
+
+  const logout = useCallback(async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" })
+    } catch { }
+    setCurrentUser(null)
+  }, [])
+
+  const getDoctors = useCallback((): User[] => {
+    // Build doctors list from current user if they are a doctor
+    // and from any known data
+    return users.filter((u) => u.role === "doctor")
   }, [users])
 
-  const login = useCallback(
-    (email: string, password: string): User | null => {
-      const user = users.find((u) => u.email === email && u.password === password)
-      if (user) {
-        setCurrentUser(user)
-        try {
-          localStorage.setItem("clinic_current_user_id", user.id)
-        } catch (e) {
-          console.error("Failed to save session to localStorage", e)
-        }
-        return user
-      }
-      return null
-    },
-    [users]
-  )
-
-  const register = useCallback(
-    (data: Omit<User, "id" | "role"> & { mobile: string; age: number; gender: "male" | "female" | "other"; address?: string }): { user?: User; error?: string } => {
-      // Check if email already exists
-      if (users.some((u) => u.email === data.email)) {
-        return { error: "An account with this email already exists" }
-      }
-
-      // Create standard user account
-      const newUser: User = {
-        id: `u${users.length + 1}`,
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        mobile: data.mobile,
-        role: "patient"
-      }
-
-      // Create corresponding patient profile with full details
-      const newPatient: Patient = {
-        id: `p${patientCounter}`,
-        patientId: `PAT-${String(patientCounter).padStart(3, "0")}`,
-        name: data.name,
-        mobile: data.mobile,
-        age: data.age,
-        gender: data.gender,
-        address: data.address || "Not provided",
-        registrationDate: new Date().toISOString().split("T")[0],
-        userId: newUser.id
-      }
-      patientCounter++
-
-      setUsers((prev) => {
-        const updated = [...prev, newUser]
-        try {
-          // Persist all non-seed registered users to localStorage
-          const extra = updated.filter((u) => !seedUsers.some((s) => s.id === u.id))
-          localStorage.setItem("clinic_registered_users", JSON.stringify(extra))
-        } catch { }
-        return updated
-      })
-      setPatients((prev) => {
-        const updated = [...prev, newPatient]
-        try {
-          // Persist all non-seed registered patients to localStorage
-          const extra = updated.filter((p) => !seedPatients.some((s) => s.id === p.id))
-          localStorage.setItem("clinic_registered_patients", JSON.stringify(extra))
-        } catch { }
-        return updated
-      })
-      setCurrentUser(newUser)
-
-      try {
-        localStorage.setItem("clinic_current_user_id", newUser.id)
-      } catch (e) {
-        console.error("Failed to save session to localStorage", e)
-      }
-
-      return { user: newUser }
-    },
-    [users]
-  )
-
-  const logout = useCallback(() => {
-    setCurrentUser(null)
-    try {
-      localStorage.removeItem("clinic_current_user_id")
-    } catch (e) {
-      console.error("Failed to remove session from localStorage", e)
-    }
+  const addPatient = useCallback(async (data: Omit<Patient, "id" | "patientId" | "registrationDate">): Promise<Patient> => {
+    const res = await fetch("/api/patients", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+    const result = await res.json()
+    const patient = normalizeId(result.patient) as Patient
+    setPatients((prev) => [...prev, patient])
+    return patient
   }, [])
 
-  const getDoctors = useCallback(
-    () => users.filter((u) => u.role === "doctor"),
-    [users]
-  )
+  const updatePatient = useCallback(async (id: string, data: Partial<Patient>) => {
+    const res = await fetch("/api/patients", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ...data }),
+    })
+    const result = await res.json()
+    const updated = normalizeId(result.patient) as Patient
+    setPatients((prev) => prev.map((p) => (p.id === id ? updated : p)))
+  }, [])
 
-  const addPatient = useCallback(
-    (data: Omit<Patient, "id" | "patientId" | "registrationDate">): Patient => {
-      const newPatient: Patient = {
-        ...data,
-        id: `p${patientCounter}`,
-        patientId: `PAT-${String(patientCounter).padStart(3, "0")}`,
-        registrationDate: new Date().toISOString().split("T")[0],
-      }
-      patientCounter++
-      setPatients((prev) => [...prev, newPatient])
-      return newPatient
-    },
-    []
-  )
+  const getPatientById = useCallback((id: string) => {
+    return patients.find((p) => p.id === id)
+  }, [patients])
 
-  const updatePatient = useCallback((id: string, data: Partial<Patient>) => {
-    setPatients((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...data } : p))
+  const searchPatients = useCallback((query: string): Patient[] => {
+    const q = query.toLowerCase()
+    return patients.filter((p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.mobile.includes(q) ||
+      p.patientId.toLowerCase().includes(q)
     )
+  }, [patients])
+
+  const addAppointment = useCallback(async (data: Omit<Appointment, "id" | "appointmentId" | "createdAt">): Promise<Appointment> => {
+    const res = await fetch("/api/appointments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+    const result = await res.json()
+    const appt = normalizeId(result.appointment) as Appointment
+    setAppointments((prev) => [...prev, appt])
+    return appt
   }, [])
 
-  const getPatientById = useCallback(
-    (id: string) => patients.find((p) => p.id === id),
-    [patients]
-  )
+  const updateAppointmentStatus = useCallback(async (id: string, status: AppointmentStatus) => {
+    await fetch(`/api/appointments/${id}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    })
+    setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)))
+  }, [])
 
-  const searchPatients = useCallback(
-    (query: string) => {
-      const q = query.toLowerCase()
-      return patients.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.mobile.includes(q) ||
-          p.patientId.toLowerCase().includes(q)
-      )
-    },
-    [patients]
-  )
+  const getAvailableSlots = useCallback((doctorId: string, date: string): string[] => {
+    const booked = appointments
+      .filter((a) => a.doctorId === doctorId && a.date === date && a.status !== "cancelled")
+      .map((a) => a.timeSlot)
+    return TIME_SLOTS.filter((s) => !booked.includes(s))
+  }, [appointments])
 
-  const addAppointment = useCallback(
-    (data: Omit<Appointment, "id" | "appointmentId" | "createdAt">): Appointment => {
-      const newAppt: Appointment = {
-        ...data,
-        id: `a${appointmentCounter}`,
-        appointmentId: `APT-${String(appointmentCounter).padStart(3, "0")}`,
-        createdAt: new Date().toISOString().split("T")[0],
-      }
-      appointmentCounter++
-      setAppointments((prev) => [...prev, newAppt])
-      return newAppt
-    },
-    []
-  )
+  const getAppointmentsForDoctor = useCallback((doctorId: string, date?: string) => {
+    return appointments.filter((a) => a.doctorId === doctorId && (!date || a.date === date))
+  }, [appointments])
 
-  const updateAppointmentStatus = useCallback(
-    (id: string, status: AppointmentStatus) => {
-      setAppointments((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, status } : a))
-      )
-    },
-    []
-  )
+  const getAppointmentsForPatient = useCallback((patientId: string) => {
+    return appointments.filter((a) => a.patientId === patientId)
+  }, [appointments])
 
-  const getAvailableSlots = useCallback(
-    (doctorId: string, date: string) => {
-      const booked = appointments
-        .filter(
-          (a) =>
-            a.doctorId === doctorId &&
-            a.date === date &&
-            a.status !== "cancelled"
-        )
-        .map((a) => a.timeSlot)
-      return TIME_SLOTS.filter((s) => !booked.includes(s))
-    },
-    [appointments]
-  )
+  const addConsultation = useCallback(async (data: Omit<Consultation, "id" | "createdAt">): Promise<Consultation> => {
+    const res = await fetch("/api/consultations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+    const result = await res.json()
+    const cons = normalizeId(result.consultation) as Consultation
+    setConsultations((prev) => [...prev, cons])
+    return cons
+  }, [])
 
-  const getAppointmentsForDoctor = useCallback(
-    (doctorId: string, date?: string) => {
-      return appointments.filter(
-        (a) => a.doctorId === doctorId && (!date || a.date === date)
-      )
-    },
-    [appointments]
-  )
+  const getConsultationsForPatient = useCallback((patientId: string) => {
+    return consultations.filter((c) => c.patientId === patientId)
+  }, [consultations])
 
-  const getAppointmentsForPatient = useCallback(
-    (patientId: string) => {
-      return appointments.filter((a) => a.patientId === patientId)
-    },
-    [appointments]
-  )
-
-  const addConsultation = useCallback(
-    (data: Omit<Consultation, "id" | "createdAt">): Consultation => {
-      const newCons: Consultation = {
-        ...data,
-        id: `c${consultationCounter}`,
-        createdAt: new Date().toISOString().split("T")[0],
-      }
-      consultationCounter++
-      setConsultations((prev) => [...prev, newCons])
-      return newCons
-    },
-    []
-  )
-
-  const getConsultationsForPatient = useCallback(
-    (patientId: string) => {
-      return consultations.filter((c) => c.patientId === patientId)
-    },
-    [consultations]
-  )
+  if (isLoading) {
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <StoreContext.Provider
       value={{
         currentUser,
+        isLoading,
         login,
         register,
         logout,
@@ -500,8 +292,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         getConsultationsForPatient,
       }}
     >
-      {/* Optional: we could refrain from rendering children until isInitialized, but since this is mock data and hydration is fast, we can safely render children right away. The UI login flash will be minimal. */}
-      {isInitialized ? children : null}
+      {children}
     </StoreContext.Provider>
   )
 }

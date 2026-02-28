@@ -30,8 +30,9 @@ export function RegisterForm() {
     const [gender, setGender] = useState<"male" | "female" | "other">("male")
     const [address, setAddress] = useState("")
     const [error, setError] = useState("")
+    const [isLoading, setIsLoading] = useState(false)
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError("")
 
@@ -50,7 +51,8 @@ export function RegisterForm() {
             return
         }
 
-        const { user, error: registerError } = register({
+        setIsLoading(true)
+        const { user, error: registerError } = await register({
             name,
             email,
             password,
@@ -59,6 +61,7 @@ export function RegisterForm() {
             gender,
             address,
         })
+        setIsLoading(false)
 
         if (registerError) {
             setError(registerError)
@@ -269,8 +272,8 @@ export function RegisterForm() {
                             </div>
                         </div>
 
-                        <Button type="submit" className="w-full h-11 mt-1 font-semibold">
-                            Create Account & Sign In
+                        <Button type="submit" className="w-full h-11 mt-1 font-semibold" disabled={isLoading}>
+                            {isLoading ? "Creating Account..." : "Create Account & Sign In"}
                         </Button>
 
                         <p className="text-center text-sm text-muted-foreground mt-2">
