@@ -10,9 +10,10 @@ import { SiteFooter } from "./site-footer"
 
 interface HomepageProps {
   onLogin: () => void
+  onQuickLogin?: (role: string) => void
 }
 
-export function Homepage({ onLogin }: HomepageProps) {
+export function Homepage({ onLogin, onQuickLogin }: HomepageProps) {
   const scrollToSection = useCallback((sectionId: string) => {
     const el = document.getElementById(sectionId)
     if (el) {
@@ -24,7 +25,7 @@ export function Homepage({ onLogin }: HomepageProps) {
     <div className="flex min-h-svh flex-col">
       <SiteHeader onNavigate={scrollToSection} onLogin={onLogin} />
       <main className="flex-1">
-        <HeroSection onBookAppointment={onLogin} onLogin={onLogin} />
+        <HeroSection onBookAppointment={onLogin} onLogin={onLogin} onQuickLogin={onQuickLogin} />
         <DoctorInfoSection />
         <AboutClinicSection />
         <FeaturesSection />

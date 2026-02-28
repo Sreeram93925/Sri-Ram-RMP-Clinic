@@ -5,9 +5,10 @@ import { CalendarDays, LogIn } from "lucide-react"
 interface HeroSectionProps {
   onBookAppointment: () => void
   onLogin: () => void
+  onQuickLogin?: (role: string) => void
 }
 
-export function HeroSection({ onBookAppointment, onLogin }: HeroSectionProps) {
+export function HeroSection({ onBookAppointment, onLogin, onQuickLogin }: HeroSectionProps) {
   return (
     <section
       id="hero"
@@ -57,6 +58,53 @@ export function HeroSection({ onBookAppointment, onLogin }: HeroSectionProps) {
               className="object-cover"
               priority
             />
+          </div>
+
+          <div className="mt-8 grid grid-cols-2 gap-3">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-auto flex-col py-3 px-2 gap-1.5 border border-primary/10 hover:border-primary/30"
+              onClick={() => onQuickLogin?.("admin")}
+            >
+              <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <LogIn className="size-4" />
+              </div>
+              <span className="text-xs font-semibold">Admin Access</span>
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-auto flex-col py-3 px-2 gap-1.5 border border-accent/10 hover:border-accent/30"
+              onClick={() => onQuickLogin?.("doctor")}
+            >
+              <div className="flex size-8 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                <LogIn className="size-4" />
+              </div>
+              <span className="text-xs font-semibold">Doctor Access</span>
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-auto flex-col py-3 px-2 gap-1.5 border border-chart-3/10 hover:border-chart-3/30"
+              onClick={() => onQuickLogin?.("receptionist")}
+            >
+              <div className="flex size-8 items-center justify-center rounded-lg bg-chart-3/10 text-chart-3">
+                <LogIn className="size-4" />
+              </div>
+              <span className="text-xs font-semibold">Receptionist</span>
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-auto flex-col py-3 px-2 gap-1.5 border border-chart-4/10 hover:border-chart-4/30"
+              onClick={() => onQuickLogin?.("patient")}
+            >
+              <div className="flex size-8 items-center justify-center rounded-lg bg-chart-4/10 text-chart-4">
+                <LogIn className="size-4" />
+              </div>
+              <span className="text-xs font-semibold">Patient Login</span>
+            </Button>
           </div>
         </div>
       </div>
