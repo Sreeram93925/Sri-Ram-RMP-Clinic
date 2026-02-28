@@ -26,14 +26,15 @@ import {
 
 interface AppShellProps {
   onBackToHome?: () => void
+  initialEmail?: string
 }
 
-export function AppShell({ onBackToHome }: AppShellProps) {
+export function AppShell({ onBackToHome, initialEmail }: AppShellProps) {
   const { currentUser } = useStore()
   const [currentPage, setCurrentPage] = useState("dashboard")
 
   if (!currentUser) {
-    return <LoginForm onBackToHome={onBackToHome} />
+    return <LoginForm onBackToHome={onBackToHome} initialEmail={initialEmail} />
   }
 
   const renderPage = () => {

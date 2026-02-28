@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useStore } from "@/lib/store"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,14 +12,22 @@ import Link from "next/link"
 
 interface LoginFormProps {
   onBackToHome?: () => void
+  initialEmail?: string
 }
 
-export function LoginForm({ onBackToHome }: LoginFormProps) {
+export function LoginForm({ onBackToHome, initialEmail }: LoginFormProps) {
   const { login } = useStore()
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState(initialEmail || "")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+
+  // Sync initialEmail prop with local state when it changes
+  useEffect(() => {
+    if (initialEmail) {
+      setEmail(initialEmail)
+    }
+  }, [initialEmail])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
