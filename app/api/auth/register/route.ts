@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken"
 import { connectDB } from "@/lib/mongodb"
 import { UserModel } from "@/lib/models/User"
 import { PatientModel } from "@/lib/models/Patient"
+import { sendVerificationEmail } from "@/lib/email"
+import crypto from "crypto"
 
 const JWT_SECRET = process.env.JWT_SECRET!
 
@@ -25,6 +27,10 @@ export async function POST(req: NextRequest) {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 12)
 
+        // Generate verification token
+        const verificationToken = crypto.randomBytes(32).toString("hex")
+        const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+
         // Create user
         const user = await UserModel.create({
             name,
@@ -32,7 +38,18 @@ export async function POST(req: NextRequest) {
             password: hashedPassword,
             role: "patient",
             mobile,
+            verificationToken,
+            verificationTokenExpires,
+            isEmailVerified: false,
         })
+
+        // Try to send verification email (non-blocking or at least error-handled)
+        try {
+            await sendVerificationEmail(user.email, verificationToken)
+        } catch (emailErr) {
+            console.error("Failed to send verification email:", emailErr)
+            // We still created the user, they can request a resend later
+        }
 
         // Count existing patients for sequential ID
         const patientCount = await PatientModel.countDocuments()
@@ -58,7 +75,15 @@ export async function POST(req: NextRequest) {
         )
 
         const response = NextResponse.json({
-            user: { id: user._id.toString(), name: user.name, email: user.email, role: user.role, mobile: user.mobile },
+            user: {
+                id: user._id.toString(),
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                mobile: user.mobile,
+                isEmailVerified: false
+            },
+            message: "Registration successful. Please check your email to verify your account."
         })
 
         response.cookies.set("clinic_token", token, {

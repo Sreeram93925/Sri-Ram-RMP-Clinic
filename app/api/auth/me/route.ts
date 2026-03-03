@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
                 role: user.role,
                 mobile: user.mobile,
                 specialization: user.specialization,
+                isEmailVerified: user.isEmailVerified,
             },
         })
     } catch {

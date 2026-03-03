@@ -15,6 +15,7 @@ export interface User {
   role: UserRole
   mobile?: string
   specialization?: string
+  isEmailVerified?: boolean
 }
 
 export interface Patient {

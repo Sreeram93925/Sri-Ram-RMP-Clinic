@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
                 role: user.role,
                 mobile: user.mobile,
                 specialization: user.specialization,
+                isEmailVerified: user.isEmailVerified,
             },
         })
 

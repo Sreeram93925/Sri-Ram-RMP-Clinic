@@ -147,7 +147,15 @@ export function LoginForm({ onBackToHome, initialEmail }: LoginFormProps) {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  href="/auth/retrieve"
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
